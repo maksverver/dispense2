@@ -1,0 +1,38 @@
+general
+-------
+        - validate project configuration document (how?!)
+[0.1.4] - remove single-result mode
+[0.1.4] - update manual to reflect removal of single-result mode
+        - set up testing environment
+
+dispense
+--------
+        - add result verification:
+            - a work unit is sent to different hosts
+            - the number of different hosts can be configured (default 3)
+            - the interval of checked packets can be configured (ie. 1 == each, 100 == every hundreth)
+[0.1.5] - reduce memory requirements for dispense (use sliding window)
+
+enact
+-----
+        - find a way to handle block-buffering applications (open Python issue)
+
+collect
+-------
+[0.1.5] - reduce memory requirements for collect (use sliding window)
+
+participate
+-----------
+        - support some form of integrity verification
+        - support sub-projects
+        - run as a service under Windows (?)
+        - create Windows installer (?)
+
+host
+----
+        - automatically skip processed work units (?????)
+
+stats
+-----
+        - write it: module for generating project statistics
+        - provide XSL/CSS stylesheets for fancy display

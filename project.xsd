@@ -1,0 +1,245 @@
+<?xml version="1.0"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:annotation>
+<xsd:documentation xml:lang="en">
+    Project configuration file schema for Dispense2 version 0.1.0.
+    Please see README.txt for copyright statements, license terms and
+    author information.
+</xsd:documentation>
+</xsd:annotation>
+
+<!--
+    A project configuration file consists of a single Project element.
+-->
+<xsd:element name="project" type="Project" />
+
+<!--
+    A Project element consists of (optionally) a specification of the number of
+    results (single-result mode is the default), followed by precisely one
+    Server element, followed by one or more Client elements.
+    
+    Also, a project name, ID and URL must be supplied as attributes. The
+    project ID must be a valid local filename, as it is used as the name of a
+    subdirectory.
+    
+    A simple Project element could look like this:
+        <project id="search" name="Exhaustive search for optimal solutions"
+            url="http://www.mydomain.com/search/project.xml">
+        
+            <server> ... </server>    
+            <client> ... </client>
+            <client> ... </client>
+            <client> ... </client>
+                
+        </project>
+-->
+<xsd:complexType name="Project">
+    <xsd:sequence>
+        <xsd:element name="results" type="ResultCardinality"
+            minOccurs="0" maxOccurs="1" />
+        <xsd:element name="server" type="Server"
+            minOccurs="1" maxOccurs="1" />
+        <xsd:element name="client" type="Client"
+            minOccurs="1" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="id" type="LocalFileName" />
+    <xsd:attribute name="name" type="xsd:normalizedString" />
+    <xsd:attribute name="url" type="RemoteFileLocation" />
+</xsd:complexType>
+
+ 
+<!--
+    A Server element consists of server address and port, any number of files
+    required to host the project and local input and output files, which are
+    are used as input and output for dispensing work units.
+    
+    This element is used by clients to determine how to connect to the project
+    host and by servers to determine which work units to dispense and on what
+    host address and port to listen for enacting clients.
+    
+    A typical Server element looks like this:
+    <server>
+        <host>server.mydomain.com</host>
+        <port>3450</port>
+        <file md5="6ca81702af272e4aa984f8f7504f815c" name="work.dat"
+            >http://www.mydomain.com/search/somefile.txt</file>
+        <input>work.dat</input>
+        <output>results.dat</output>
+    </server>
+-->
+<xsd:complexType name="Server">
+<xsd:sequence>
+    <xsd:element name="host" type="ServerAddress"
+        minOccurs="1" maxOccurs="1" />
+    <xsd:element name="port" type="ServerPort"
+        minOccurs="1" maxOccurs="1" />
+    <xsd:element name="file" type="File"
+        minOccurs="0" maxOccurs="unbounded" />
+    <xsd:element name="input" type="LocalFileName"
+        minOccurs="1" maxOccurs="1" />
+    <xsd:element name="output" type="LocalFileName"
+        minOccurs="1" maxOccurs="1" />
+</xsd:sequence>
+</xsd:complexType>
+
+
+<!--
+    A Client element consists of any number of platform specifications, exactly
+    one command to be executed, and any number of required files.
+    
+    There should be a seperate Client element for each platform that needs a
+    different set of files or a different command to run the computing
+    application. However, a single Client element can be used for several
+    platforms if they are compatible (as is the case, for example, for FreeBSD
+    4.x and 5.x, which are distinct platforms).
+    
+    Note that under most UNIX-like operating systems, executable files will
+    need to have a special mode.
+    
+    A sample Client element looks like this:
+    <client>
+        <platform>win32</platform>        
+        <command>search.exe</command>
+        <file md5="66a08c997d9b7a523f9273f03b5a60df" name="search.exe"
+            >http://www.mydomain.com/search/search-win32.exe</file>
+        <file md5="f4b795839435f5e688b943c216f9c968" name="search.dat"
+            >http://www.mydomain.com/search/database-bigendian</file>
+    </client>
+-->
+<xsd:complexType name="Client">
+<xsd:sequence>
+    <xsd:element name="platform" type="PlatformId"
+        minOccurs="0" maxOccurs="unbounded" />
+    <xsd:element name="command" type="Command"
+        minOccurs="1" maxOccurs="1" />
+    <xsd:element name="file" type="File"
+        minOccurs="0" maxOccurs="unbounded" />
+</xsd:sequence>
+</xsd:complexType>
+ 
+ 
+<!--
+    A server address is a (fully qualified) hostname or an IP address,
+    e.g. "server.mydomain.com" or "123.45.67.89".
+-->
+<xsd:simpleType name="ServerAddress">
+<xsd:restriction base="xsd:string">
+    <!-- TODO: make more restrictive -->
+</xsd:restriction>
+</xsd:simpleType>
+
+
+<!--
+    A server port is an integer between 1 and 65536 (exclusive).
+-->
+<xsd:simpleType name="ServerPort">
+<xsd:restriction base="xsd:positiveInteger">
+    <xsd:maxExclusive value="65536" />
+</xsd:restriction>
+</xsd:simpleType>
+
+ 
+<!--
+    A File description contains the location from which the file can be
+    retrieved, as well as the MD5 hash code of the file and name of the local
+    file to which it will be saved. The mode attribute, if present, specifies
+    the octal mode for the local file (which is useful for executable files
+    under UNIX-like operating systems).
+-->
+<xsd:complexType name="File">
+<xsd:simpleContent>
+<xsd:extension base="RemoteFileLocation">
+    <xsd:attribute name="md5" type="MD5HashCode" />
+    <xsd:attribute name="name" type="LocalFileName" />
+    <xsd:attribute name="mode" type="LocalFileMode" />
+</xsd:extension>
+</xsd:simpleContent>
+</xsd:complexType>
+ 
+ 
+<!--
+    A project can use single-result or multiple-results per work unit. The
+    ResultCardinality type has two possible values: "single" and "multiple".
+-->
+<xsd:simpleType name="ResultCardinality">
+<xsd:restriction base="xsd:string">
+    <xsd:enumeration value="single" />
+    <xsd:enumeration value="multiple" />
+</xsd:restriction>
+</xsd:simpleType>
+
+
+<!--
+    Platforms are identified by Python; they are simple string values.
+    Examples include "linux2" (for Linux with kernel 2.x), "win32" (all 32-bit
+    Windows systems) and "freebsd4" (for FreeBSD 4.x).
+-->
+<xsd:simpleType name="PlatformId">
+  <xsd:restriction base="xsd:normalizedString">
+    <xsd:minLength value="1"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--
+    The MD5HashCode type is used to hold the 32-character representation of a
+    128-bit MD5 hash code (using hexadecimal representation). Note that lower
+    case characters must be used. As an example, the MD5 hash code of the
+    string "abcde" is "ab56b4d92b40713acc5af89985d4b786" (without the quotes).
+-->
+<xsd:simpleType name="MD5HashCode">
+  <xsd:restriction base="xsd:string">
+    <xsd:pattern value="[0-9a-f]{32}"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--
+    Local filenames must be valid local filenames on any platform, which means
+    that certain characters should be avoided. Especially the filename should
+    not include any path information! This also means that all filenames in a
+    project must be unique. An example would be "input.txt", "words.dat" or
+    "app-1.2.3.exe".
+-->
+<xsd:simpleType name="LocalFileName">
+  <xsd:restriction base="xsd:normalizedString">
+    <xsd:minLength value="1" />
+    <xsd:maxLength value="64" />
+    <xsd:pattern value="[0-9a-zA-Z.,\-_:;]+"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--
+    A file mode is an octal string of three to four characters.
+-->
+<xsd:simpleType name="LocalFileMode">
+  <xsd:restriction base="xsd:normalizedString">
+    <xsd:minLength value="3" />
+    <xsd:maxLength value="4" />
+    <xsd:pattern value="[0-7]{3,4}"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+
+<!--
+    Any URL that is understood by Python's urllib can be used to describe the
+    location of a remote file, for example:
+    "http://www.website.com/dir/file.txt".
+-->
+<xsd:simpleType name="RemoteFileLocation">
+  <xsd:restriction base="xsd:anyURI" />
+</xsd:simpleType>
+
+
+<!--
+    A system command may be any normalized string. Typically, it's something
+    along the lines of "foo.exe -a" or "./foo -a", but it can be any string
+    that can be executed as a system command on the local platform.
+-->
+<xsd:simpleType name="Command">
+  <xsd:restriction base="xsd:normalizedString" />
+</xsd:simpleType>
+
+</xsd:schema>
